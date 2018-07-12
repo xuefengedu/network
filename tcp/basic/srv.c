@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #define BUFSZ 200
 int port = 6180;             /* no significance */
@@ -47,6 +48,9 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
+  char sendBuff[1025];
+  memset(sendBuff, '0', sizeof(sendBuff));
+
   /**********************************************************
    * accept a connection, read til it closes, repeat
    *********************************************************/
@@ -64,8 +68,13 @@ int main(int argc, char *argv[]) {
       rc = read(fa,buf,BUFSZ);
       if (rc==-1) printf("read: %s\n", strerror(errno));
       else if (rc==0) printf("connection closed\n");
-      else printf("received %d bytes: %.*s\n", rc, rc, buf);
+      else if (strncmp(buf,"#END#",strlen(buf))==0) {printf("end read\n");break;} 
+      else printf("received %d bytes from client: %.*s\n", rc, rc, buf);
     } while (rc > 0);
+
+    time_t ticks = time(NULL);
+    snprintf(sendBuff, sizeof(sendBuff), "Time on server: %.24s\r\n", ctime(&ticks));
+    write(fa, sendBuff, strlen(sendBuff)); 
     close(fa);
   }
 }
