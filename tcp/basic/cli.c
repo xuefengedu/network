@@ -11,7 +11,7 @@ int port = 6180;             /* no significance */
 
 int main(int argc, char *argv[]) {
 
-  char *buf = "hello, world!";
+  char *buf = "hello world from client!";
   int buflen = strlen(buf), rc;
 
   /**********************************************************
@@ -46,6 +46,27 @@ int main(int argc, char *argv[]) {
 
   if ( (rc=write(fd,buf,buflen)) != buflen) {
     printf("write: %s\n", (rc<0)?strerror(errno):"incomplete");
-    exit(-1);
+    //exit(-1);
   }
+
+  if ( (rc=write(fd,"#END#",6)) != 6) {
+    printf("write: %s\n", (rc<0)?strerror(errno):"incomplete");
+  }
+
+  int n=0;
+  char recvBuff[1024];
+  memset(recvBuff, '0',sizeof(recvBuff));
+  while ( (n = read(fd, recvBuff, sizeof(recvBuff)-1)) > 0)
+  {
+      recvBuff[n] = 0;
+      if(fputs(recvBuff, stdout) == EOF)
+      {
+          printf("\n Error : Fputs error\n");
+      }
+  } 
+
+  if(n < 0)
+  {
+      printf("\n Read error \n");
+  } 
 }
